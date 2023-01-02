@@ -1,0 +1,1 @@
+"%UNITY_EDITOR_PATH%/Unity.exe" -batchmode -projectPath . -buildTarget Win64 -executeMethod App.Editor.CommandBuild.Build -quit
