@@ -10,9 +10,9 @@ using UnityEngine;
 
 namespace App
 {
-	public class AppEntryPoint : MonoBehaviour
+	public class PlayfabLoginDemo : MonoBehaviour
 	{
-		public static bool IsOnNetworkServer =>
+		public static bool IsOnPlayfabDedicatedServer =>
 #if UNITY_SERVER && !UNITY_EDITOR && ENABLE_PLAYFABSERVER_API
 			true;
 #else
@@ -24,18 +24,18 @@ namespace App
 			public string PlayFabId { get; set; }
 		}
 
-		readonly Dictionary<ulong, Connection> m_connectedPlayers = new();
+		readonly Dictionary<ulong, Connection> m_ClientIdToPlayerTable = new();
 
 		string m_PlayFabCustomID = "CustomID";
 
 		// Start is called before the first frame update
 		void Start()
 		{
-			if (IsOnNetworkServer)
+			if (IsOnPlayfabDedicatedServer)
 			{
 				Debug.Log("PlayFabMultiplayerAgentAPI.Start");
 				PlayFabMultiplayerAgentAPI.Start();
-				PlayFabMultiplayerAgentAPI.IsDebugging = false;
+				PlayFabMultiplayerAgentAPI.IsDebugging = true;
 				//PlayFabMultiplayerAgentAPI.OnMaintenanceCallback += OnMaintenance;
 				//PlayFabMultiplayerAgentAPI.OnShutDownCallback += OnShutdown;
 				PlayFabMultiplayerAgentAPI.OnAgentErrorCallback += msg => Debug.LogError(msg);
@@ -59,7 +59,7 @@ namespace App
 
 		private void OnGUI()
 		{
-			if (IsOnNetworkServer) { return; }
+			if (IsOnPlayfabDedicatedServer) { return; }
 			if (NetworkManager.Singleton.IsClient) { return; }
 
 			m_PlayFabCustomID = GUILayout.TextField(m_PlayFabCustomID);
@@ -73,6 +73,7 @@ namespace App
 						Debug.Log($"OnLoggedIn:{result.PlayFabId}");
 						NetworkManager.Singleton.OnClientConnectedCallback += clientId =>
 						{
+							// send my PlayfabId to server
 							OnConnectedServerRpc(result.PlayFabId);
 						};
 						NetworkManager.Singleton.StartClient();
@@ -88,16 +89,19 @@ namespace App
 		{
 			// work on server 
 			Debug.Log($"OnClientConnected:{clientId}");
-			Debug.Assert(!m_connectedPlayers.ContainsKey(clientId));
-			m_connectedPlayers[clientId] = new Connection();
+			Debug.Assert(!m_ClientIdToPlayerTable.ContainsKey(clientId));
+			m_ClientIdToPlayerTable[clientId] = new Connection();
 		}
 
 		void OnClientDisconnected(ulong clientId)
 		{
 			// work on server
 			Debug.Log($"OnClientDisconnected:{clientId}");
-			m_connectedPlayers.Remove(clientId);
-			PlayFabMultiplayerAgentAPI.UpdateConnectedPlayers(m_connectedPlayers.Values.Where(it => !string.IsNullOrEmpty(it.PlayFabId)).Select(it => new ConnectedPlayer(it.PlayFabId)).ToList());
+			if (m_ClientIdToPlayerTable.ContainsKey(clientId))
+			{
+				m_ClientIdToPlayerTable.Remove(clientId);
+				PlayFabMultiplayerAgentAPI.UpdateConnectedPlayers(m_ClientIdToPlayerTable.Values.Where(it => !string.IsNullOrEmpty(it.PlayFabId)).Select(it => new ConnectedPlayer(it.PlayFabId)).ToList());
+			}
 		}
 
 		[ServerRpc(RequireOwnership = false, Delivery = RpcDelivery.Reliable)]
@@ -105,16 +109,18 @@ namespace App
 		{
 			Debug.Log($"OnConnectedServerRpc {serverRpcParams.Receive.SenderClientId} {playfabId}");
 
-			if (!IsOnNetworkServer) { return; }
+			if (!IsOnPlayfabDedicatedServer) { return; }
 			// work on server 
 			ulong clientId = serverRpcParams.Receive.SenderClientId;
 			bool connected = NetworkManager.Singleton.ConnectedClientsIds.Contains(clientId);
 			if (connected)
 			{
-				if (m_connectedPlayers.TryGetValue(clientId, out var connection))
+				if (m_ClientIdToPlayerTable.TryGetValue(clientId, out var connection))
 				{
+					// notify joining player to Playfab
 					connection.PlayFabId = playfabId;
-					PlayFabMultiplayerAgentAPI.UpdateConnectedPlayers(m_connectedPlayers.Values.Where(it => !string.IsNullOrEmpty(it.PlayFabId)).Select(it => new ConnectedPlayer(it.PlayFabId)).ToList());
+					PlayFabMultiplayerAgentAPI.UpdateConnectedPlayers(
+						m_ClientIdToPlayerTable.Values.Where(it => !string.IsNullOrEmpty(it.PlayFabId)).Select(it => new ConnectedPlayer(it.PlayFabId)).ToList());
 				}
 				else
 				{

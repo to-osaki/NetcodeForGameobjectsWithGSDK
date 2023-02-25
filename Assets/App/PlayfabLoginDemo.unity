@@ -230,15 +230,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2974514019541307267, guid: a886ff0fdc9744d7f9c49444bd8cff7f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.1227615
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2974514019541307267, guid: a886ff0fdc9744d7f9c49444bd8cff7f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 44.504204
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2974514019541307267, guid: a886ff0fdc9744d7f9c49444bd8cff7f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 81.16283
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2974514019541307267, guid: a886ff0fdc9744d7f9c49444bd8cff7f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -459,7 +459,7 @@ MonoBehaviour:
   m_DisconnectTimeoutMS: 30000
   ConnectionData:
     Address: 127.0.0.1
-    Port: 56100
+    Port: 8080
     ServerListenAddress: 0.0.0.0
   DebugSimulator:
     PacketDelayMS: 0

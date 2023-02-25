@@ -22,9 +22,6 @@ namespace App
 		public static implicit operator SerializedString32Bytes(string s) => new SerializedString32Bytes() { m_ID = new FixedString32Bytes(s) };
 	}
 
-	/// <summary>
-	/// クライアント常駐データ
-	/// </summary>
 	public class NetworkPlayerObject : NetworkBehaviour
 	{
 		[SerializeField]
