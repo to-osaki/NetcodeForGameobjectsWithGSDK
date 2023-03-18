@@ -36,7 +36,26 @@ namespace App.Editor
 			{
 				targetPlatform = BuildTarget.StandaloneWindows64,
 				subTarget = (int)StandaloneBuildSubtarget.Server,
-				outputRelativePath = "DedicatedServer/DedicatedServer"
+				outputRelativePath = "DedicatedServer/DedicatedServer",
+				scenesInBuild = new string[]
+				{
+					"Assets/App/UnityTransportDedicatedServer.unity"
+				},
+			};
+			return builder.Build();
+		}
+
+		private static BuildReport BuildDemo()
+		{
+			var builder = new BatchBuild.Builder()
+			{
+				targetPlatform = BuildTarget.StandaloneWindows64,
+				subTarget = (int)StandaloneBuildSubtarget.Server,
+				outputRelativePath = "DedicatedServer/DedicatedServer",
+				scenesInBuild = new string[]
+				{
+					"Assets/App/PlayfabLoginDemo.unity"
+				},
 			};
 			return builder.Build();
 		}
